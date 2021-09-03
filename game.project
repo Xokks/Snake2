@@ -1,0 +1,17 @@
+[bootstrap]
+main_collection = /main/main.collectionc
+
+[script]
+shared_state = 1
+
+[display]
+width = 1120
+height = 576
+vsync = 0
+
+[android]
+input_method = HiddenInputField
+
+[project]
+title = Snake2
+
