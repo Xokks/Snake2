@@ -1,41 +1,92 @@
-function init(self)
-	-- Add initialization code here
-	-- Learn more: https://defold.com/manuals/script/
-	-- Remove this function if not needed
+local function put_food(self)
+	self.food = {x = math.random(2, 39), y = math.random(2, 21)}
+	--check = tilemap.get_tile("#grid", "layer1", self.food.x, self.food.y)
+	check = tilemap.get_tile("#grid", "layer1", self.food.x, self.food.y)
+	if check == 17 or check == 3 or check == 2 then
+		print("food or body already here") 
+	else
+		tilemap.set_tile("#grid", "layer1", self.food.x, self.food.y, 17)    
+	end
 end
 
-function final(self)
-	-- Add finalization code here
-	-- Learn more: https://defold.com/manuals/script/
-	-- Remove this function if not needed
+function init(self)
+	msg.post(".", "acquire_input_focus")
+
+	self.segments = {
+		{x = 2, y = 2},
+		{x = 3, y = 2},
+		{x = 4, y = 2},
+		{x = 5, y = 2} }
+		self.dir = {x = 1, y = 0}
+		self.dirqueue = {}
+		self.speed = 7.0
+		self.alive = true
+		self.t = 0
+
+		math.randomseed(socket.gettime())
+		put_food(self)
 end
 
 function update(self, dt)
-	-- Add update code here
-	-- Learn more: https://defold.com/manuals/script/
-	-- Remove this function if not needed
-end
+	self.t = self.t + dt
+		if self.t >= 1.0 / self.speed and self.alive then
+			local newdir = table.remove(self.dirqueue, 1)
 
-function on_message(self, message_id, message, sender)
-	-- Add message-handling code here
-	-- Learn more: https://defold.com/manuals/message-passing/
-	-- Remove this function if not needed
+			if newdir then
+				local opposite = newdir.x == -self.dir.x or newdir.y == -self.dir.y
+				if not opposite then
+					self.dir = newdir
+				end
+			end
+
+			local head = self.segments[#self.segments]
+			local newhead = {x = head.x + self.dir.x, y = head.y + self.dir.y}
+
+			table.insert(self.segments, newhead)
+
+			local tile = tilemap.get_tile("#grid", "layer1", newhead.x, newhead.y)
+
+			if tile == 2 or tile == 3 or tile == 4 or tile == 5 or tile == 6 or tile == 7 or tile == 8 or tile == 9 or tile == 20 or tile == 36 or tile == 52 or tile == 68 or tile == 69 or tile == 70 or tile == 71 or tile == 72 or tile == 73 or tile == 25 or tile == 41 or tile == 57 then
+				self.alive = false
+				print("Game over")
+				msg.post("sound#die", "play_sound", {delay = 0, gain = 0.3})
+			elseif tile == 17 then
+				self.speed = self.speed + 1 * dt
+				msg.post("sound#coin1", "play_sound", {delay = 0, gain = 0.3})
+				put_food(self)
+			else
+				local tail = table.remove(self.segments, 1)
+				tilemap.set_tile("#grid", "layer1", tail.x, tail.y, 1)
+			end
+
+			bodylength = #self.segments
+			
+			for i, s in ipairs(self.segments) do
+				if bodylength == i then
+					tilemap.set_tile("#grid", "layer1", s.x, s.y, 2)            
+				else	
+					tilemap.set_tile("#grid", "layer1", s.x, s.y, 3)            
+				end
+			end
+			self.t = 0
+
+			spawn = math.random(1,100)
+			if spawn > 96 then
+				put_food(self)
+			else
+				print('pizza')
+			end
+		end
 end
 
 function on_input(self, action_id, action)
-	-- Add input-handling code here. The game object this script is attached to
-	-- must have acquired input focus:
-	--
-	--    msg.post(".", "acquire_input_focus")
-	--
-	-- All mapped input bindings will be received. Mouse and touch input will
-	-- be received regardless of where on the screen it happened.
-	-- Learn more: https://defold.com/manuals/input/
-	-- Remove this function if not needed
-end
-
-function on_reload(self)
-	-- Add reload-handling code here
-	-- Learn more: https://defold.com/manuals/hot-reload/
-	-- Remove this function if not needed
+		if action_id == hash("up") and action.pressed then
+			table.insert(self.dirqueue, {x = 0, y = 1})
+		elseif action_id == hash("down") and action.pressed then
+			table.insert(self.dirqueue, {x = 0, y = -1})
+		elseif action_id == hash("left") and action.pressed then
+			table.insert(self.dirqueue, {x = -1, y = 0})
+		elseif action_id == hash("right") and action.pressed then
+			table.insert(self.dirqueue, {x = 1, y = 0})
+		end
 end

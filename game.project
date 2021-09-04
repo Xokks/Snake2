@@ -5,8 +5,8 @@ main_collection = /main/main.collectionc
 shared_state = 1
 
 [display]
-width = 1120
-height = 576
+width = 1280
+height = 704
 vsync = 0
 
 [android]
@@ -14,4 +14,7 @@ input_method = HiddenInputField
 
 [project]
 title = Snake2
+
+[physics]
+scale = 1.0
 
